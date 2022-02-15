@@ -15,8 +15,8 @@ def postgres_json_contains(field: Term, value: str) -> Criterion:
 def postgres_json_contained_by(field: Term, value: str) -> Criterion:
     return BasicCriterion(JSONOperators.CONTAINED_BY, field, ValueWrapper(value))
 
-def postgres_array_contains(field: Term, value: str) -> Criterion:
-    return BasicCriterion(JSONOperators.CONTAINS, field, ValueWrapper(value))
+def postgres_array_contains(field: Term, value: List) -> Criterion:
+    return BasicCriterion(JSONOperators.CONTAINS, field, value)
 
 
 operator_keywords = {
