@@ -1,11 +1,19 @@
 import json
 import operator
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 from pypika.enums import JSONOperators
-from pypika.terms import BasicCriterion, Criterion, Term, ValueWrapper
+from pypika.terms import BasicCriterion, Criterion, Term, ValueWrapper, ArrayValue
+from pypika.utils import format_alias_sql
+
 
 from tortoise.filters import is_null, not_equal, not_null
+
+
+class ArrayValue(Tuple):
+    def get_sql(self, **kwargs: Any) -> str:
+        sql = ",".join(term.get_sql(**kwargs) for term in self.values)
+        return format_alias_sql(sql, self.alias, **kwargs)
 
 
 def postgres_json_contains(field: Term, value: str) -> Criterion:
@@ -15,8 +23,9 @@ def postgres_json_contains(field: Term, value: str) -> Criterion:
 def postgres_json_contained_by(field: Term, value: str) -> Criterion:
     return BasicCriterion(JSONOperators.CONTAINED_BY, field, ValueWrapper(value))
 
+
 def postgres_array_contains(field: Term, value: List) -> Criterion:
-    return BasicCriterion(JSONOperators.CONTAINS, field, value)
+    return BasicCriterion(JSONOperators.CONTAINS, field, ArrayValue(value))
 
 
 operator_keywords = {
@@ -30,7 +39,9 @@ def _get_json_criterion(items: List):
     if len(items) == 2:
         left = items.pop(0)
         right = items.pop(0)
-        return BasicCriterion(JSONOperators.GET_TEXT_VALUE, ValueWrapper(left), ValueWrapper(right))
+        return BasicCriterion(
+            JSONOperators.GET_TEXT_VALUE, ValueWrapper(left), ValueWrapper(right)
+        )
 
     left = items.pop(0)
     return BasicCriterion(
@@ -38,15 +49,23 @@ def _get_json_criterion(items: List):
     )
 
 
-def _create_json_criterion(items: List, field_term: Term, operator_: Callable, value: str):
+def _create_json_criterion(
+    items: List, field_term: Term, operator_: Callable, value: str
+):
     if len(items) == 1:
         term = items.pop(0)
         return operator_(
-            BasicCriterion(JSONOperators.GET_TEXT_VALUE, field_term, ValueWrapper(term)), value
+            BasicCriterion(
+                JSONOperators.GET_TEXT_VALUE, field_term, ValueWrapper(term)
+            ),
+            value,
         )
 
     return operator_(
-        BasicCriterion(JSONOperators.GET_JSON_VALUE, field_term, _get_json_criterion(items)), value
+        BasicCriterion(
+            JSONOperators.GET_JSON_VALUE, field_term, _get_json_criterion(items)
+        ),
+        value,
     )
 
 
@@ -59,7 +78,9 @@ def _serialize_value(value: Any):
 def postgres_json_filter(field: Term, value: Dict) -> Criterion:
     ((key, filter_value),) = value.items()
     filter_value = _serialize_value(filter_value)
-    key_parts = list(map(lambda item: int(item) if item.isdigit() else str(item), key.split("__")))
+    key_parts = list(
+        map(lambda item: int(item) if item.isdigit() else str(item), key.split("__"))
+    )
     operator_ = operator.eq
     if key_parts[-1] in operator_keywords:
         operator_ = operator_keywords[str(key_parts.pop(-1))]
