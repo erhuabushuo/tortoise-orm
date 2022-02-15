@@ -1,9 +1,9 @@
 import json
 import operator
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List
 
 from pypika.enums import JSONOperators
-from pypika.terms import BasicCriterion, Criterion, Term, ValueWrapper, ArrayValue
+from pypika.terms import BasicCriterion, Criterion, Term, ValueWrapper, Tuple
 from pypika.utils import format_alias_sql
 
 
