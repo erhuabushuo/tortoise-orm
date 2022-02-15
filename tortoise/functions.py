@@ -68,6 +68,18 @@ class Concat(Function):
     database_func = functions.Concat
 
 
+class Now(Function):  # type: ignore
+    """
+    Get current timestamp
+
+    :samp:`NOW()`
+    """
+
+    def __init__(self, alias=None) -> None:
+        super().__init__("NOW", alias=alias)
+
+
+
 ##############################################################################
 # Aggregate functions
 ##############################################################################

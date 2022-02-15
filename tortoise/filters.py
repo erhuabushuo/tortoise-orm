@@ -7,7 +7,7 @@ from pypika.enums import DatePart, SqlTypes
 from pypika.functions import Cast, Extract, Upper
 from pypika.terms import BasicCriterion, Criterion, Equality, Term, ValueWrapper
 
-from tortoise.fields import Field, JSONField
+from tortoise.fields import Field, JSONField, ArrayField
 from tortoise.fields.relational import BackwardFKRelation, ManyToManyFieldInstance
 
 if TYPE_CHECKING:  # pragma: nocoverage
@@ -201,6 +201,12 @@ def json_filter(field: Term, value: Dict) -> Criterion:
     pass
 
 
+def array_contains(field: Term, value: str) -> Criterion:
+    # will be override in each executor
+    pass
+
+
+
 ##############################################################################
 # Filter resolvers
 ##############################################################################
@@ -330,6 +336,38 @@ def get_json_filter(field_name: str, source_field: str):
     }
 
 
+def get_array_filter(field_name: str, source_field: str):
+    actual_field_name = field_name
+    return {
+        field_name: {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": operator.eq,
+        },
+        f"{field_name}__not": {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": not_equal,
+        },
+        f"{field_name}__isnull": {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": is_null,
+            "value_encoder": bool_encoder,
+        },
+        f"{field_name}__not_isnull": {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": not_null,
+            "value_encoder": bool_encoder,
+        },
+        f"{field_name}__contains": {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": array_contains,
+        },
+    }
+
 def get_filters_for_field(
     field_name: str, field: Optional[Field], source_field: str
 ) -> Dict[str, dict]:
@@ -339,6 +377,8 @@ def get_filters_for_field(
         return get_backward_fk_filters(field_name, field)
     if isinstance(field, JSONField):
         return get_json_filter(field_name, source_field)
+    if isinstance(field, ArrayField):
+        return get_array_filter(field_name, source_field)
 
     actual_field_name = field_name
     if field_name == "pk" and field:

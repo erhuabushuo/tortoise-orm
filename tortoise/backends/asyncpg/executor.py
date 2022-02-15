@@ -12,9 +12,10 @@ from tortoise.contrib.postgres.json_functions import (
     postgres_json_contained_by,
     postgres_json_contains,
     postgres_json_filter,
+    postgres_array_contains,
 )
 from tortoise.contrib.postgres.search import SearchCriterion
-from tortoise.filters import json_contained_by, json_contains, json_filter, search
+from tortoise.filters import json_contained_by, json_contains, array_contains, json_filter, search
 
 
 def postgres_search(field: Term, value: Term):
@@ -29,6 +30,7 @@ class AsyncpgExecutor(BaseExecutor):
         json_contains: postgres_json_contains,
         json_contained_by: postgres_json_contained_by,
         json_filter: postgres_json_filter,
+        array_contains: postgres_array_contains,
     }
 
     def parameter(self, pos: int) -> Parameter:
