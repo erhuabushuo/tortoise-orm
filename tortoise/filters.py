@@ -206,6 +206,10 @@ def array_contains(field: Term, value: str) -> Criterion:
     pass
 
 
+def array_overlap(field: Term, value: str) -> Criterion:
+    # will be override in each executor
+    pass
+
 
 ##############################################################################
 # Filter resolvers
@@ -365,6 +369,11 @@ def get_array_filter(field_name: str, source_field: str):
             "field": actual_field_name,
             "source_field": source_field,
             "operator": array_contains,
+        },
+        f"{field_name}__overlap": {
+            "field": actual_field_name,
+            "source_field": source_field,
+            "operator": array_overlap,
         },
     }
 

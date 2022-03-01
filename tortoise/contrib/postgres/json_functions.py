@@ -28,6 +28,10 @@ def postgres_array_contains(field: Term, value: List) -> Criterion:
     return BasicCriterion(JSONOperators.CONTAINS, field, ArrayValue(value))
 
 
+def postgres_array_overlap(field: Term, value: List) -> Criterion:
+    return BasicCriterion('&&', field, ArrayValue(value))
+
+
 operator_keywords = {
     "not": not_equal,
     "isnull": is_null,
