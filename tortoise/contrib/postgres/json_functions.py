@@ -1,3 +1,5 @@
+from enum import Enum
+
 import json
 import operator
 from typing import Any, Callable, Dict, List
@@ -8,6 +10,12 @@ from pypika.utils import format_alias_sql
 
 
 from tortoise.filters import is_null, not_equal, not_null
+
+
+class ArrayOperators(Enum):
+    OVERLAP = "&&"
+    CONTAINS = "@>"
+
 
 
 class ArrayValue(Tuple):
@@ -25,11 +33,11 @@ def postgres_json_contained_by(field: Term, value: str) -> Criterion:
 
 
 def postgres_array_contains(field: Term, value: List) -> Criterion:
-    return BasicCriterion(JSONOperators.CONTAINS, field, ArrayValue(value))
+    return BasicCriterion(ArrayOperators.CONTAINS, field, ArrayValue(value))
 
 
 def postgres_array_overlap(field: Term, value: List) -> Criterion:
-    return BasicCriterion('&&', field, ArrayValue(value))
+    return BasicCriterion(ArrayOperators.OVERLAP, field, ArrayValue(value))
 
 
 operator_keywords = {
